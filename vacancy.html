@@ -325,8 +325,9 @@ function updateTime() {
     + pad(n.getHours()) + ':' + pad(n.getMinutes()) + ' 更新';
 }
 
-/* ── JSONP でデータ取得 ── */
+/* ── scriptタグ経由でデータ取得 ── */
 function handleVacancyData(data) {
+  clearTimeout(window._vacancyTimer);
   try {
     render(data);
     updateTime();
@@ -341,25 +342,24 @@ function loadData() {
   el.innerHTML = '<div class="loading"><div class="spinner"></div>空室情報を取得しています...</div>';
 
   // 前回のscriptタグがあれば削除
-  var old = document.getElementById('jsonp-vacancy');
+  var old = document.getElementById('vacancyScript');
   if (old) old.parentNode.removeChild(old);
 
-  var script = document.createElement('script');
-  script.id = 'jsonp-vacancy';
-  script.src = API_URL + '?callback=handleVacancyData&_=' + Date.now();
-
   // タイムアウト（15秒）
-  var timer = setTimeout(function() {
-    if (script.parentNode) script.parentNode.removeChild(script);
+  window._vacancyTimer = setTimeout(function() {
+    var s = document.getElementById('vacancyScript');
+    if (s) s.parentNode.removeChild(s);
     showError('データの取得に失敗しました');
   }, 15000);
 
-  script.onload = function() { clearTimeout(timer); };
+  var script = document.createElement('script');
+  script.id = 'vacancyScript';
+  script.src = API_URL + '?callback=handleVacancyData';
   script.onerror = function() {
-    clearTimeout(timer);
+    clearTimeout(window._vacancyTimer);
+    if (script.parentNode) script.parentNode.removeChild(script);
     showError('データの取得に失敗しました');
   };
-
   document.head.appendChild(script);
 }
 
