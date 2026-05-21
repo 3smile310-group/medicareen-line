@@ -325,17 +325,19 @@ function updateTime() {
     + pad(n.getHours()) + ':' + pad(n.getMinutes()) + ' 更新';
 }
 
-function fetchWithTimeout(url, ms) {
-  var ctrl = new AbortController();
-  var timer = setTimeout(function() { ctrl.abort(); }, ms);
-  return fetch(url, { signal: ctrl.signal }).finally(function() { clearTimeout(timer); });
-}
-
 async function loadData() {
   var el = document.getElementById('facilityList');
   el.innerHTML = '<div class="loading"><div class="spinner"></div>空室情報を取得しています...</div>';
   try {
-    var res = await fetchWithTimeout(API_URL, 10000);
+    var controller = new AbortController();
+    var timer = setTimeout(function() { controller.abort(); }, 15000);
+    var res = await fetch(API_URL, {
+      method: 'GET',
+      mode: 'cors',
+      redirect: 'follow',
+      signal: controller.signal
+    });
+    clearTimeout(timer);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     var data = await res.json();
     render(data);
