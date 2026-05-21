@@ -258,7 +258,7 @@ body{
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbwFv2Fgpo1MR04s0tK3lRllRu7ebhddznfGowtZd8MHmkxWpWXclwLyuxrvoVtGJMMg4g/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxQFEe04CQlxmg-Pe5AAvbY2lvydjKOSlz4O9G6VQYzCFgI6tn3DjInxunK7RYo1Zwdrg/exec';
 const LINE_URL = 'https://lin.ee/ZFJzoAy';
 const REFRESH_MS = 5 * 60 * 1000;
 
@@ -325,27 +325,42 @@ function updateTime() {
     + pad(n.getHours()) + ':' + pad(n.getMinutes()) + ' 更新';
 }
 
-async function loadData() {
-  var el = document.getElementById('facilityList');
-  el.innerHTML = '<div class="loading"><div class="spinner"></div>空室情報を取得しています...</div>';
+/* ── JSONP でデータ取得 ── */
+function handleVacancyData(data) {
   try {
-    var controller = new AbortController();
-    var timer = setTimeout(function() { controller.abort(); }, 15000);
-    var res = await fetch(API_URL, {
-      method: 'GET',
-      mode: 'cors',
-      redirect: 'follow',
-      signal: controller.signal
-    });
-    clearTimeout(timer);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    var data = await res.json();
     render(data);
     updateTime();
   } catch (e) {
-    console.error('API error:', e);
-    showError('データの取得に失敗しました');
+    console.error('Render error:', e);
+    showError('データの表示に失敗しました');
   }
+}
+
+function loadData() {
+  var el = document.getElementById('facilityList');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>空室情報を取得しています...</div>';
+
+  // 前回のscriptタグがあれば削除
+  var old = document.getElementById('jsonp-vacancy');
+  if (old) old.parentNode.removeChild(old);
+
+  var script = document.createElement('script');
+  script.id = 'jsonp-vacancy';
+  script.src = API_URL + '?callback=handleVacancyData&_=' + Date.now();
+
+  // タイムアウト（15秒）
+  var timer = setTimeout(function() {
+    if (script.parentNode) script.parentNode.removeChild(script);
+    showError('データの取得に失敗しました');
+  }, 15000);
+
+  script.onload = function() { clearTimeout(timer); };
+  script.onerror = function() {
+    clearTimeout(timer);
+    showError('データの取得に失敗しました');
+  };
+
+  document.head.appendChild(script);
 }
 
 document.getElementById('lineBtn').href = LINE_URL;
