@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>メディケア縁グループ 空室状況</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Noto Sans JP','Segoe UI',sans-serif;
+  background:#f7f8fa;
+  color:#333;
+  font-size:16px;
+  line-height:1.6;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:90px;
+}
+
+/* ── ヘッダー ── */
+.header{
+  background:linear-gradient(135deg,#3a7c6a 0%,#5ba894 100%);
+  color:#fff;
+  padding:28px 20px 32px;
+  text-align:center;
+}
+.header-brand{
+  font-size:12px;
+  letter-spacing:3px;
+  opacity:.8;
+  margin-bottom:6px;
+  text-transform:uppercase;
+}
+.header h1{
+  font-size:21px;
+  font-weight:800;
+  letter-spacing:1px;
+}
+
+/* ── 更新バー ── */
+.update-bar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:10px 16px;
+  background:#fff;
+  border-bottom:1px solid #eee;
+  font-size:12px;
+  color:#888;
+}
+.pulse-dot{
+  width:7px;height:7px;
+  background:#10b981;
+  border-radius:50%;
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── 凡例 ── */
+.legend{
+  display:flex;
+  justify-content:center;
+  gap:18px;
+  padding:14px 16px 6px;
+}
+.legend-item{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;color:#777;
+}
+.legend-dot{width:9px;height:9px;border-radius:50%}
+.legend-dot.green{background:#10b981}
+.legend-dot.gray{background:#ccc}
+.legend-dot.orange{background:#f59e0b}
+
+/* ── 施設カード ── */
+.cards{
+  padding:12px 16px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:20px 18px 16px;
+  box-shadow:0 1px 6px rgba(0,0,0,.05);
+  position:relative;
+  overflow:hidden;
+}
+.card::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:4px;
+}
+.card.available::before{background:#10b981}
+.card.full::before{background:#d1d5db}
+.card.upcoming::before{background:#f59e0b}
+
+.card-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.card-name{
+  font-size:16px;
+  font-weight:700;
+  line-height:1.4;
+  color:#1a1a2e;
+}
+.card-type{
+  font-size:11px;
+  color:#999;
+  margin-top:2px;
+}
+
+/* バッジ */
+.badge{
+  flex-shrink:0;
+  padding:5px 14px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  white-space:nowrap;
+  margin-top:2px;
+}
+.badge-available{background:#d1fae5;color:#065f46}
+.badge-full{background:#f3f4f6;color:#9ca3af}
+.badge-upcoming{background:#fef3c7;color:#b45309}
+
+/* 詳細テキスト */
+.card-detail{
+  font-size:12px;
+  color:#777;
+  margin-bottom:12px;
+}
+
+/* 詳しくはこちらボタン */
+.card-link{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  width:100%;
+  padding:10px;
+  background:#f7f8fa;
+  color:#3a7c6a;
+  border:1.5px solid #d5e8e0;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:600;
+  text-decoration:none;
+  transition:background .15s;
+}
+.card-link:active{background:#edf5f0}
+.card-link svg{width:14px;height:14px;fill:#3a7c6a}
+
+/* ── 注意書き ── */
+.note{
+  text-align:center;
+  padding:14px 20px 20px;
+  font-size:11px;
+  color:#aaa;
+  line-height:1.7;
+}
+
+/* ── LINE固定ボタン ── */
+.line-cta{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  padding:10px 16px;
+  padding-bottom:max(10px,env(safe-area-inset-bottom));
+  background:#fff;
+  border-top:1px solid #e5e7eb;
+  box-shadow:0 -2px 12px rgba(0,0,0,.06);
+  z-index:100;
+}
+.line-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:100%;
+  padding:15px;
+  background:#06c755;
+  color:#fff;
+  border:none;
+  border-radius:14px;
+  font-size:16px;
+  font-weight:700;
+  text-decoration:none;
+  letter-spacing:.5px;
+  transition:background .15s;
+}
+.line-btn:active{background:#05a847}
+.line-btn svg{width:22px;height:22px;fill:#fff}
+
+/* ── ローディング ── */
+.loading{text-align:center;padding:60px 20px;color:#aaa}
+.spinner{
+  width:32px;height:32px;
+  border:3px solid #e5e7eb;
+  border-top-color:#3a7c6a;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  margin:0 auto 14px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── エラー ── */
+.error{text-align:center;padding:40px 20px;color:#ef4444;font-size:14px}
+.error button{
+  margin-top:12px;padding:10px 24px;
+  background:#3a7c6a;color:#fff;
+  border:none;border-radius:8px;
+  font-size:14px;cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">Medicare En Group</div>
+  <h1>空室状況</h1>
+</header>
+
+<div class="update-bar">
+  <span class="pulse-dot"></span>
+  <span id="updateTime">読み込み中...</span>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-dot green"></span>空室あり</div>
+  <div class="legend-item"><span class="legend-dot gray"></span>満室</div>
+  <div class="legend-item"><span class="legend-dot orange"></span>開業予定</div>
+</div>
+
+<div id="facilityList" class="cards">
+  <div class="loading">
+    <div class="spinner"></div>
+    空室情報を取得しています...
+  </div>
+</div>
+
+<div class="note">
+  ※ 空室状況はリアルタイムで更新されます<br>
+  ※ 詳細は各施設へお気軽にお問い合わせください
+</div>
+
+<div class="line-cta">
+  <a href="https://lin.ee/ZFJzoAy" class="line-btn" id="lineBtn">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596a.626.626 0 01-.199.031c-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.271.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+    見学のご予約・お問い合わせ
+  </a>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbyh0HzGWgOmDprACL2hiWXvU0lCVNzwesn96J-Nn67qRIMHuZ2ESgZ3U151Kd0NjFq9Vw/exec';
+const LINE_URL = 'https://lin.ee/ZFJzoAy';
+const REFRESH_MS = 5 * 60 * 1000;
+
+const FACILITIES = {
+  yao:      { name: 'メディケア縁 八尾',       type: '住宅型有料老人ホーム', url: 'https://www.medicareen.com/' },
+  ekimae:   { name: 'メディケア縁 近鉄八尾駅前', type: '住宅型有料老人ホーム', url: 'https://www.medicareen-yaoekimae.com/' },
+  aloha:    { name: 'メディケア縁 ALOHA',      type: '住宅型有料老人ホーム', url: 'https://www.medicareen-aloha.com/' },
+  hirakata: { name: 'メディケア結 枚方',        type: '住宅型有料老人ホーム', url: 'https://www.medicareen-hirakata.com/' },
+};
+const FACILITY_ORDER = ['yao', 'ekimae', 'aloha', 'hirakata'];
+
+function statusInfo(status) {
+  if (status === '空室あり') return { cls: 'available', badge: 'badge-available', label: '空室あり' };
+  if (status === '満室')     return { cls: 'full',      badge: 'badge-full',      label: '満室' };
+  if (status === '開業前')   return { cls: 'upcoming',  badge: 'badge-upcoming',  label: '7/2 開業予定' };
+  return { cls: 'full', badge: 'badge-full', label: status || '—' };
+}
+
+function escapeHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function render(data) {
+  var container = document.getElementById('facilityList');
+  var html = '';
+  FACILITY_ORDER.forEach(function(id) {
+    var f = FACILITIES[id];
+    var rec = null;
+    for (var i = 0; i < data.length; i++) {
+      if (data[i].id === id) { rec = data[i]; break; }
+    }
+    if (!rec) rec = { status: '—', detail: '' };
+    var si = statusInfo(rec.status);
+    html += '<div class="card ' + si.cls + '">'
+      + '<div class="card-top">'
+      +   '<div>'
+      +     '<div class="card-name">' + escapeHtml(f.name) + '</div>'
+      +     '<div class="card-type">' + escapeHtml(f.type) + '</div>'
+      +   '</div>'
+      +   '<span class="badge ' + si.badge + '">' + escapeHtml(si.label) + '</span>'
+      + '</div>'
+      + (rec.detail ? '<div class="card-detail">' + escapeHtml(rec.detail) + '</div>' : '')
+      + '<a href="' + f.url + '" target="_blank" rel="noopener" class="card-link">'
+      +   '詳しくはこちら'
+      +   '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M7.3 4.3a1 1 0 011.4 0l5 5a1 1 0 010 1.4l-5 5a1 1 0 01-1.4-1.4L11.58 10 7.3 5.7a1 1 0 010-1.4z"/></svg>'
+      + '</a>'
+      + '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function showError(msg) {
+  document.getElementById('facilityList').innerHTML =
+    '<div class="error">' + escapeHtml(msg) + '<br><button onclick="loadData()">再読み込み</button></div>';
+}
+
+function updateTime() {
+  var n = new Date();
+  var pad = function(v) { return v < 10 ? '0' + v : '' + v; };
+  document.getElementById('updateTime').textContent =
+    n.getFullYear() + '/' + pad(n.getMonth() + 1) + '/' + pad(n.getDate()) + ' '
+    + pad(n.getHours()) + ':' + pad(n.getMinutes()) + ' 更新';
+}
+
+function fetchWithTimeout(url, ms) {
+  var ctrl = new AbortController();
+  var timer = setTimeout(function() { ctrl.abort(); }, ms);
+  return fetch(url, { signal: ctrl.signal }).finally(function() { clearTimeout(timer); });
+}
+
+async function loadData() {
+  var el = document.getElementById('facilityList');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>空室情報を取得しています...</div>';
+  try {
+    var res = await fetchWithTimeout(API_URL, 10000);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    render(data);
+    updateTime();
+  } catch (e) {
+    console.error('API error:', e);
+    showError('データの取得に失敗しました');
+  }
+}
+
+document.getElementById('lineBtn').href = LINE_URL;
+loadData();
+setInterval(loadData, REFRESH_MS);
+var lastLoad = 0;
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden && Date.now() - lastLoad > 30000) {
+    lastLoad = Date.now();
+    loadData();
+  }
+});
+</script>
+</body>
+</html>
